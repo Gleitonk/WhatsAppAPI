@@ -1,5 +1,5 @@
-import parsePhoneNumber, { isValidPhoneNumber } from 'libphonenumber-js';
 import { create, SocketState, Whatsapp } from 'venom-bot';
+import { validateAndFormatPhoneNumber } from './util';
 
 export type QrCode = {
     base64Qr: string
@@ -32,8 +32,8 @@ class Sender {
     private initialize() {
 
         const qr = (
-            base64Qr: string, 
-            asciiQR: string, 
+            base64Qr: string,
+            asciiQR: string,
             attempts: number
         ) => {
             this.qr = { base64Qr, attempts, asciiQR }
@@ -52,21 +52,20 @@ class Sender {
             })
         }
 
-        create('ws-sender', qr, status)
+        create('ws-sender', qr)
             .then((client) => start(client))
             .catch((error) => console.error(error));
     }
 
     async sendMessage(to: string, body: string) {
-        if (!isValidPhoneNumber(to, "BR")) {
-            throw new Error('Número Whatsapp inválido!')
+
+        const validatedNumber = validateAndFormatPhoneNumber(to)
+
+        if (!validatedNumber) {
+            throw 'Número Whatsapp inválido!'
         }
 
-        let phoneNumber = parsePhoneNumber(to, "BR")?.format("E.164").replace('+', '') as string
-
-        phoneNumber = phoneNumber.includes("@c.us") ? phoneNumber : `${phoneNumber}@c.us`
-
-        await this.client.sendText(phoneNumber, body)
+        await this.client.sendText(validatedNumber, body)
     }
 
 
@@ -75,8 +74,8 @@ class Sender {
 
         for (const phone of listOfPhoneNumbers) {
 
-            const validatedNumber = this.validateAndFormatPhoneNumber(phone)
-            
+            const validatedNumber = validateAndFormatPhoneNumber(phone)
+
 
             if (!validatedNumber) {
                 listOfInvalidNumbers.push(phone)
@@ -92,18 +91,7 @@ class Sender {
         return { listOfInvalidNumbers, not_sent_amount: listOfInvalidNumbers.length }
     }
 
-    validateAndFormatPhoneNumber(stringToCheck: string) {
 
-        if (!isValidPhoneNumber(stringToCheck, "BR")) {
-            return false
-        }
-
-        let phoneNumber = parsePhoneNumber(stringToCheck, "BR")?.format("E.164").replace('+', '') as string
-
-        phoneNumber = phoneNumber.includes("@c.us") ? phoneNumber : `${phoneNumber}@c.us`
-
-        return phoneNumber;
-    }
 
 }
 

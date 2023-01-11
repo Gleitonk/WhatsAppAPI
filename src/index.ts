@@ -36,8 +36,8 @@ app.post('/send', async (req: Request, res: Response) => {
 
         return res.status(200).json()
     } catch (error) {
-        console.error(error)
-        res.status(500).json({ status: "error", message: error })
+        res.status(500).json({ status: "error", message: error})
+        console.log(error)
     }
 })
 

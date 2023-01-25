@@ -52,7 +52,7 @@ class Sender {
             })
         }
 
-        create('ws-sender', qr)
+        create('gestao', qr)
             .then((client) => start(client))
             .catch((error) => console.error(error));
     }

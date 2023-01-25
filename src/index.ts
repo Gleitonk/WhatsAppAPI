@@ -3,11 +3,13 @@ import Sender from './sender'
 
 const sender = new Sender()
 
-
-
 const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+
+
+// app.listen(process.env.PORT); Obrigatorio em produção
+app.listen('333', () => console.log("Live"))
 
 
 app.get('/status', (req: Request, res: Response) => {
@@ -36,7 +38,7 @@ app.post('/send', async (req: Request, res: Response) => {
 
         return res.status(200).json()
     } catch (error) {
-        res.status(500).json({ status: "error", message: error})
+        res.status(500).json({ status: "error", message: error })
         console.log(error)
     }
 })
@@ -55,5 +57,3 @@ app.post('/sendMultiple', async (req: Request, res: Response) => {
         res.status(500).json({ status: "error", message: error })
     }
 })
-
-app.listen(3333, () => console.log('Server is running on port 3333'))

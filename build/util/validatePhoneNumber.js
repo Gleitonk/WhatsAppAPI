@@ -34,8 +34,11 @@ function validateAndFormatPhoneNumber(stringToCheck) {
     if (phoneNumber.length < 12) {
         return false;
     }
-    var regex = new RegExp(/^(55)\s?([1-9][0-9])((?:[2-9])\d{3})\-?(\d{4})$/);
-    if (!regex.test(phoneNumber)) {
+    if (phoneNumber.length === 13 && phoneNumber.substring(4, 5) === "9") {
+        phoneNumber = phoneNumber.substring(0, 4) + phoneNumber.substring(5);
+    }
+    var regexFormatCheck = new RegExp(/^(55)([1-9][0-9])((?:[1-9])\d{3})\-?(\d{4})$/);
+    if (!regexFormatCheck.test(phoneNumber)) {
         return false;
     }
     phoneNumber = phoneNumber.includes("@c.us") ? phoneNumber : "".concat(phoneNumber, "@c.us");

@@ -1,12 +1,11 @@
 {
   "name": "whatsappapi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "rimraf ./build && tsc",
-    "dev": "nodemon",
-    "build": "tsc"
+    "build": "rimraf ./build && tsc",
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",

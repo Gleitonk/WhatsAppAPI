@@ -9,7 +9,6 @@ function validateAndFormatPhoneNumber(stringToCheck: string) {
 
     let phoneNumber = parsePhoneNumber(stringToCheck, "BR")?.format("E.164").replace('+', '') as string
 
-
     if (phoneNumber.length < 12) {
         return false
     }

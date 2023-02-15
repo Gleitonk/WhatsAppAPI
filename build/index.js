@@ -45,8 +45,8 @@ var sender = new sender_1.default();
 var app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
-app.listen(process.env.PORT); // Obrigatorio em produção
-// app.listen('333', () => console.log("Live"))
+// app.listen(process.env.PORT); // Obrigatorio em produção
+app.listen('333', function () { return console.log("Live"); });
 app.get('/status', function (req, res) {
     var connected = sender.isConnected;
     if (!connected) {

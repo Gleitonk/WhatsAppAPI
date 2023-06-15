@@ -53,7 +53,12 @@ class Sender {
       });
     };
 
-    create("gestao", qr)
+    create("gestao", qr, status, {
+      headless: true,
+      puppeteerOptions: {
+        ignoreDefaultArgs: ["--disable-extensions"],
+      },
+    })
       .then((client) => start(client))
       .catch((error) => console.error(error));
   }

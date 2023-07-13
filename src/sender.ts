@@ -54,7 +54,7 @@ class Sender {
     };
 
     create("gestao", qr, status, {
-      headless: true,
+      headless: "new",
       puppeteerOptions: {
         ignoreDefaultArgs: ["--disable-extensions"],
       },

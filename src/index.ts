@@ -8,8 +8,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 
-// app.listen(process.env.PORT); // Obrigatorio em produção
-app.listen('3333', () => console.log("Live"))
+app.listen(process.env.PORT); 
 
 
 app.get('/status', (req: Request, res: Response) => {

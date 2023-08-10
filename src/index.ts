@@ -7,9 +7,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// app.listen(process.env.PORT);
-app.listen(3333);
-
 app.use(async (req, res, next) => {
   if (!sender) {
     return res.status(500).json({ error: "Not ready." });
@@ -17,6 +14,8 @@ app.use(async (req, res, next) => {
 
   next();
 });
+
+app.listen(process.env.PORT);
 
 app.get("/status", async (req: Request, res: Response) => {
   if (sender.isConnected === undefined) {

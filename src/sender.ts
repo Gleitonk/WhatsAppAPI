@@ -1,11 +1,6 @@
-import { CatchQR, create, SocketState, Whatsapp } from "venom-bot";
+import { Client, LocalAuth, WAState } from "whatsapp-web.js";
 import { validateAndFormatPhoneNumber } from "./util";
-
-export type QrCode = {
-  base64Qr: string;
-  asciiQR: string;
-  attempts: number;
-};
+import * as QrCode from "qrcode";
 
 export type InvalidNUmbersList = {
   listOfInvalidNumbers: string[];
@@ -13,15 +8,20 @@ export type InvalidNUmbersList = {
 };
 
 class Sender {
-  private client: Whatsapp;
+  private client: Client;
   private connected: boolean;
-  private qr: CatchQR;
+  private authenticated: boolean;
+  private qr: string;
 
   get isConnected(): boolean {
     return this.connected;
   }
 
-  get qrCode(): CatchQR {
+  get isAuthenticated(): boolean {
+    return this.authenticated;
+  }
+
+  get qrCode(): string {
     return this.qr;
   }
 
@@ -30,37 +30,89 @@ class Sender {
   }
 
   private initialize() {
-    const qr = (
-      qrCode: string,
-      asciiQR: string,
-      attempt?: number,
-      urlCode?: string
-    ) => {
-      this.qr = qr;
-    };
+    const qr = (qrCode: string) => {
+      QrCode.toString(
+        qrCode,
+        { type: "terminal", small: true },
+        (err, qrCode) => {
+          if (err) {
+            console.error(err);
+          }
 
-    const status = (statusSession: string) => {
-      this.connected = ["IsLogged", "qrReadSuccess", "chatsAvailable"].includes(
-        statusSession
+          console.log(qrCode);
+        }
       );
+
+      this.qr = qrCode;
     };
 
-    const start = (client: Whatsapp) => {
+    const start = () => {
       this.client = client;
-
-      client.onStateChange((state) => {
-        this.connected = state === SocketState.CONNECTED;
-      });
+      this.connected = true;
     };
 
-    create("gestao", qr, status, {
-      headless: "new",
-      puppeteerOptions: {
-        ignoreDefaultArgs: ["--disable-extensions"],
+    const authenticated = () => {
+      this.authenticated = true;
+    };
+
+    const onAuthFailure = (reason: string) => {
+      this.authenticated = false;
+      console.error("AUTH_FAILED", reason);
+    };
+
+    const onChangeState = (state: WAState) => {
+      this.connected = state === WAState.CONNECTED;
+    };
+
+    const onDisconnect = (reason: WAState | "NAVIGATION") => {
+      this.connected = false;
+
+      console.error("Disconnected", reason);
+    };
+
+    const client = new Client({
+      authStrategy: new LocalAuth({
+        clientId: "gestao",
+        dataPath: "tokens",
+      }),
+      puppeteer: {
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--no-zygote",
+          "--disable-gpu",
+        ],
       },
-    })
-      .then((client) => start(client))
-      .catch((error) => console.error(error));
+    });
+
+    client.on("qr", qr);
+
+    client.on("ready", start);
+
+    client.on("change_state", onChangeState);
+
+    client.on("authenticated", authenticated);
+
+    client.on("auth_failure", onAuthFailure);
+
+    client.on("disconnected", onDisconnect);
+
+    client.initialize();
+  }
+
+  async getStatus() {
+    if (!this.client) {
+      return { connected: false, authenticated: false };
+    }
+
+    const state = await this.client.getState();
+
+    this.connected = state === WAState.CONNECTED;
+    return { connected: this.connected, authenticated: this.authenticated };
   }
 
   async sendMessage(to: string, body: string) {
@@ -70,7 +122,7 @@ class Sender {
       throw "Número Whatsapp inválido!";
     }
 
-    await this.client.sendText(validatedNumber, body);
+    await this.client.sendMessage(validatedNumber, body);
   }
 
   async sendMultipleMessages(
@@ -87,7 +139,7 @@ class Sender {
         continue;
       }
 
-      await this.client.sendText(validatedNumber, body).catch(() => {
+      await this.client.sendMessage(validatedNumber, body).catch(() => {
         listOfInvalidNumbers.push(phone);
       });
     }
@@ -96,6 +148,10 @@ class Sender {
       listOfInvalidNumbers,
       not_sent_amount: listOfInvalidNumbers.length,
     };
+  }
+
+  async resetState() {
+    await this.client.resetState();
   }
 }
 
